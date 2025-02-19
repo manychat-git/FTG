@@ -38,6 +38,7 @@
     const colorButtons = document.querySelectorAll('.color-btn');
 
     let currentColor = '#FA0CF7';
+    let activeAnimations = []; // Track active animations
 
     // Color selection
     colorButtons.forEach(btn => {
@@ -126,8 +127,11 @@
             const baseX = x;
             let currentLength = 0;
             let phase = Math.random() * Math.PI * 2;
+            let isActive = true;
 
             function animateDrip() {
+                if (!isActive) return; // Stop if animation was cancelled
+
                 if (currentLength < dripLength) {
                     const alpha = 1 - (currentLength / dripLength) * 0.7;
                     const currentX = baseX + Math.sin(currentLength * 0.02 + phase) * waviness;
@@ -170,8 +174,22 @@
                     
                     currentLength += speed;
                     requestAnimationFrame(animateDrip);
+                } else {
+                    // Remove from active animations when complete
+                    const index = activeAnimations.indexOf(cancelAnimation);
+                    if (index > -1) {
+                        activeAnimations.splice(index, 1);
+                    }
                 }
             }
+            
+            // Create cancel function
+            const cancelAnimation = () => {
+                isActive = false;
+            };
+
+            // Add to active animations
+            activeAnimations.push(cancelAnimation);
             
             animateDrip();
         }
@@ -240,6 +258,11 @@
 
     // Clear canvas
     clearButton.addEventListener('click', () => {
+        // Cancel all active drip animations
+        activeAnimations.forEach(cancelAnimation => cancelAnimation());
+        activeAnimations = [];
+        
+        // Clear the canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 })(); 
