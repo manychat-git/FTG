@@ -27,6 +27,7 @@
             <input type="range" id="brushSize" min="25" max="50" value="10">
         </div>
         <div class="control-group">
+            <button id="saveCanvas" class="action-btn">Save PNG</button>
             <button id="clearCanvas" class="action-btn">Clear</button>
         </div>
     `;
@@ -35,6 +36,7 @@
     const ctx = canvas.getContext('2d', { alpha: true });
     const brushSize = document.getElementById('brushSize');
     const clearButton = document.getElementById('clearCanvas');
+    const saveButton = document.getElementById('saveCanvas');
     const colorButtons = document.querySelectorAll('.color-btn');
 
     let currentColor = '#FA0CF7';
@@ -255,6 +257,31 @@
     });
 
     canvas.addEventListener('touchend', stopDrawing);
+
+    // Save functionality
+    function saveCanvasAsPNG() {
+        // Create a temporary canvas to handle the drawing
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Copy the current canvas content
+        tempCtx.drawImage(canvas, 0, 0);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = 'graffiti-art.png';
+        link.href = tempCanvas.toDataURL('image/png');
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Add save button listener
+    saveButton.addEventListener('click', saveCanvasAsPNG);
 
     // Clear canvas
     clearButton.addEventListener('click', () => {

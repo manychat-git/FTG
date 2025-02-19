@@ -37,6 +37,11 @@
     gap: 12px;
 }
 
+.graffiti-controls .control-group:last-child {
+    display: flex;
+    gap: 8px;
+}
+
 .graffiti-controls .color-buttons {
     display: flex;
     gap: 8px;
@@ -73,12 +78,21 @@
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .graffiti-controls .action-btn:hover {
     background: #444;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#saveCanvas {
+    background: #4CAF50;
+}
+
+#saveCanvas:hover {
+    background: #45a049;
 }
 
 .graffiti-controls #brushSize {
