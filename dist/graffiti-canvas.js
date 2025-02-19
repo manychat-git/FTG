@@ -1,11 +1,15 @@
 // Graffiti Canvas Effect
 (function() {
-    // Create and inject canvas
+    // Find existing container
+    const container = document.getElementById('graffiti-container');
+    if (!container) return;
+
+    // Create and inject canvas into the container
     const canvas = document.createElement('canvas');
     canvas.id = 'drawingCanvas';
-    document.body.appendChild(canvas);
+    container.appendChild(canvas);
     
-    // Create and inject controls
+    // Create and inject controls into the container
     const controls = document.createElement('div');
     controls.className = 'graffiti-controls';
     controls.innerHTML = `
@@ -26,7 +30,7 @@
             <button id="clearCanvas" class="action-btn">Clear</button>
         </div>
     `;
-    document.body.appendChild(controls);
+    container.appendChild(controls);
 
     const ctx = canvas.getContext('2d', { alpha: true });
     const brushSize = document.getElementById('brushSize');
