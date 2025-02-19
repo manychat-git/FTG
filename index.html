@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graffiti Canvas</title>
+    <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+    <canvas id="drawingCanvas"></canvas>
+    <div class="controls">
+        <div class="control-group">
+            <div class="color-buttons">
+                <button class="color-btn active" data-color="#FA0CF7" style="background: #FA0CF7"></button>
+                <button class="color-btn" data-color="#00F613" style="background: #00F613"></button>
+                <button class="color-btn" data-color="#FFF100" style="background: #FFF100"></button>
+                <button class="color-btn" data-color="#96DAE2" style="background: #96DAE2"></button>
+                <button class="color-btn" data-color="#D2B6DE" style="background: #D2B6DE"></button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label for="brushSize">Size</label>
+            <input type="range" id="brushSize" min="25" max="50" value="10">
+        </div>
+        <div class="control-group">
+            <button id="clearCanvas" class="action-btn">Clear</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
