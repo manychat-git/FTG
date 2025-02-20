@@ -7,6 +7,11 @@
     // Create and inject canvas into the container
     const canvas = document.createElement('canvas');
     canvas.id = 'drawingCanvas';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
     container.appendChild(canvas);
     
     const ctx = canvas.getContext('2d', { alpha: true });
@@ -29,20 +34,16 @@
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
-
-        // Reset transformations to prevent accumulation
+        
+        // Reset canvas transformations
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         
-        // Set the "actual" size of the canvas
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
+        // Set canvas dimensions
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
         
-        // Scale the context to ensure correct drawing operations
+        // Scale context for retina displays
         ctx.scale(dpr, dpr);
-        
-        // Set the "drawn" size of the canvas
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
         
         console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
     }
@@ -51,8 +52,17 @@
     function clearCanvas() {
         console.log("Clearing canvas...");
         
-        // Clear the entire canvas using physical dimensions
+        // Save current transformation matrix
+        ctx.save();
+        
+        // Reset transformations
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
+        // Clear the entire canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Restore transformation matrix
+        ctx.restore();
         
         // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
@@ -65,15 +75,13 @@
     resizeCanvas();
     
     // Add load event listener first
-    window.addEventListener('load', () => {
-        console.log("Window loaded, resizing canvas...");
-        resizeCanvas();
-    });
+    window.addEventListener('load', resizeCanvas);
     
-    // Then add resize event listener
+    // Then add resize event listener with debounce
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        console.log("Window resized, updating canvas...");
-        resizeCanvas();
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(resizeCanvas, 100);
     });
 
     // Drawing state
@@ -300,17 +308,14 @@
         const colorName = element.getAttribute('data-pass');
         console.log('Setting color from attribute:', colorName);
         
-        // Handle clean command first
         if (colorName === 'clean') {
-            console.log('Clean command detected, clearing canvas...');
             clearCanvas();
             return;
         }
         
-        // Only check color map if it's not a clean command
         if (colorMap[colorName]) {
-            console.log('Setting brush color to:', colorMap[colorName]);
             currentColor = colorMap[colorName];
+            console.log('Setting brush color to:', currentColor);
         }
     }
 })(); 
