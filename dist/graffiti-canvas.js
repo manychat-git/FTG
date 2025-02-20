@@ -28,25 +28,35 @@
     // Set color from data-pass attribute
     function setColorFromAttribute(element) {
         const colorName = element.getAttribute('data-pass');
-        if (!colorName) return;
+        console.log('Setting color from attribute:', colorName);
         
-        if (colorName.toLowerCase() === 'clean') {
-            console.log('Clearing canvas...');
-            // Cancel all active drip animations
-            if (activeAnimations.length > 0) {
-                activeAnimations.forEach(cancelAnimation => cancelAnimation());
-                activeAnimations = [];
-            }
-            // Make sure canvas dimensions are correct before clearing
-            resizeCanvas();
-            // Clear the canvas with proper dimensions
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            console.log('Canvas cleared with dimensions:', canvas.width, 'x', canvas.height);
+        if (!colorName) {
+            console.log('No color name found');
             return;
         }
         
-        if (colorMap[colorName]) {
-            currentColor = colorMap[colorName];
+        const lowerColorName = colorName.toLowerCase().trim();
+        console.log('Normalized color name:', lowerColorName);
+        
+        if (lowerColorName === 'clean') {
+            console.log('Cleaning canvas...');
+            // Cancel all active drip animations
+            if (activeAnimations.length > 0) {
+                console.log('Cancelling', activeAnimations.length, 'active animations');
+                activeAnimations.forEach(cancelAnimation => cancelAnimation());
+                activeAnimations = [];
+            }
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            console.log('Canvas cleared');
+            return;
+        }
+        
+        if (colorMap[lowerColorName]) {
+            console.log('Setting color to:', colorMap[lowerColorName]);
+            currentColor = colorMap[lowerColorName];
+        } else {
+            console.log('Color not found in colorMap');
         }
     }
 
