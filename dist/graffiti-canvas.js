@@ -22,7 +22,8 @@
         'green': '#00F613',
         'blue': '#96DAE2',
         'yellow': '#FFF100',
-        'thistle': '#D2B6DE'
+        'thistle': '#D2B6DE',
+        'clean': null // Add clean as a special command
     };
 
     // Set color from data-pass attribute
@@ -37,29 +38,27 @@
         
         const lowerColorName = colorName.toLowerCase().trim();
         console.log('Normalized color name:', lowerColorName);
-        
+
+        // Check if this is a special command
         if (lowerColorName === 'clean') {
             console.log('Cleaning canvas...');
-            // Force clear the canvas immediately
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.restore();
-            
-            // Then cancel animations
+            // Cancel all active drip animations
             if (activeAnimations.length > 0) {
                 console.log('Cancelling', activeAnimations.length, 'active animations');
                 activeAnimations.forEach(cancelAnimation => cancelAnimation());
                 activeAnimations = [];
             }
-            
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             console.log('Canvas cleared');
             return;
         }
         
-        if (colorMap[lowerColorName]) {
-            console.log('Setting color to:', colorMap[lowerColorName]);
-            currentColor = colorMap[lowerColorName];
+        // Handle color selection
+        const color = colorMap[lowerColorName];
+        if (color) {
+            console.log('Setting color to:', color);
+            currentColor = color;
         } else {
             console.log('Color not found in colorMap');
         }
