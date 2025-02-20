@@ -28,15 +28,20 @@
     // Set color from data-pass attribute
     function setColorFromAttribute(element) {
         const colorName = element.getAttribute('data-pass');
-        if (colorName === 'clean') {
+        if (!colorName) return;
+        
+        if (colorName.toLowerCase() === 'clean') {
             // Cancel all active drip animations
-            activeAnimations.forEach(cancelAnimation => cancelAnimation());
-            activeAnimations = [];
+            if (activeAnimations.length > 0) {
+                activeAnimations.forEach(cancelAnimation => cancelAnimation());
+                activeAnimations = [];
+            }
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             return;
         }
-        if (colorName && colorMap[colorName]) {
+        
+        if (colorMap[colorName]) {
             currentColor = colorMap[colorName];
         }
     }
