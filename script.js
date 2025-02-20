@@ -5,6 +5,7 @@ const clearButton = document.getElementById('clearCanvas');
 const colorButtons = document.querySelectorAll('.color-btn');
 
 let currentColor = '#FA0CF7'; // Default color
+let activeAnimations = [];
 
 // Color selection
 colorButtons.forEach(btn => {
@@ -20,9 +21,23 @@ colorButtons.forEach(btn => {
 
 // Set canvas size to window size
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Reset transformations to prevent accumulation
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    
+    // Set the "actual" size of the canvas
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    
+    // Scale the context to ensure correct drawing operations
+    ctx.scale(dpr, dpr);
+    
+    // Set the "drawn" size of the canvas
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    
+    console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
 }
 
 // Initial setup
@@ -35,11 +50,6 @@ let lastX = 0;
 let lastY = 0;
 
 // Spray paint effect
-function getRandomOffset(spread) {
-    return Math.random() * spread - spread / 2;
-}
-
-// Improved spray paint effect
 function sprayPaint(x, y, size, color) {
     const density = size * 4; // Increased base density
     const spread = size * 2;  // Tighter spread for more control
@@ -47,25 +57,20 @@ function sprayPaint(x, y, size, color) {
     // Create main dense center
     ctx.fillStyle = color;
     for (let i = 0; i < density; i++) {
-        // Calculate distance from center
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * spread;
         const offsetX = Math.cos(angle) * radius;
         const offsetY = Math.sin(angle) * radius;
         
-        // Particles get smaller towards the edges
         const distance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
         const maxDistance = spread;
         const normalizedDistance = distance / maxDistance;
         
-        // Adjust opacity and size based on distance from center
         const opacity = 1 - normalizedDistance;
         const particleSize = Math.random() * 1.5 * (1 - normalizedDistance * 0.5);
         
-        // Set color with adjusted opacity
         ctx.fillStyle = color.replace(')', `,${opacity})`);
         
-        // Draw particle
         ctx.beginPath();
         ctx.arc(
             x + offsetX,
@@ -98,23 +103,25 @@ function sprayPaint(x, y, size, color) {
     }
 }
 
-// Enhanced drip effect with paint flow
+// Enhanced drip effect
 function createDrip(x, y, color) {
-    if (Math.random() < 0.5) { // 50% chance for drips
-        const dripLength = Math.random() * 100 + 50; // Drips 50-150px long
-        const speed = Math.random() * 2 + 0.5; // Keep same speed
-        const width = Math.random() * 2 + 1; // Keep same width
-        const waviness = Math.random() * 1.5; // Keep same waviness
+    if (Math.random() < 0.5) {
+        const dripLength = Math.random() * 70 + 30; // Drips 30-100px long
+        const speed = Math.random() * 2 + 0.5;
+        const width = Math.random() * 2 + 1;
+        const waviness = Math.random() * 1.5;
         const baseX = x;
         let currentLength = 0;
         let phase = Math.random() * Math.PI * 2;
+        let isActive = true;
 
         function animateDrip() {
+            if (!isActive) return;
+
             if (currentLength < dripLength) {
                 const alpha = 1 - (currentLength / dripLength) * 0.7;
                 const currentX = baseX + Math.sin(currentLength * 0.02 + phase) * waviness;
                 
-                // Create a gradient for more realistic drip
                 const gradient = ctx.createLinearGradient(
                     currentX, y + currentLength,
                     currentX, y + currentLength + 40
@@ -126,7 +133,6 @@ function createDrip(x, y, color) {
                 
                 ctx.fillStyle = gradient;
                 
-                // Draw main drip body
                 ctx.beginPath();
                 ctx.ellipse(
                     currentX, 
@@ -139,7 +145,6 @@ function createDrip(x, y, color) {
                 );
                 ctx.fill();
                 
-                // Add occasional tiny drips
                 if (Math.random() < 0.08) {
                     ctx.fillStyle = colorStart;
                     ctx.beginPath();
@@ -155,9 +160,19 @@ function createDrip(x, y, color) {
                 
                 currentLength += speed;
                 requestAnimationFrame(animateDrip);
+            } else {
+                const index = activeAnimations.indexOf(cancelAnimation);
+                if (index > -1) {
+                    activeAnimations.splice(index, 1);
+                }
             }
         }
         
+        const cancelAnimation = () => {
+            isActive = false;
+        };
+
+        activeAnimations.push(cancelAnimation);
         animateDrip();
     }
 }
@@ -176,10 +191,8 @@ function draw(e) {
     const size = parseInt(brushSize.value);
     
     ctx.globalCompositeOperation = 'source-over';
-    // Main spray at current position
     sprayPaint(currentX, currentY, size, currentColor.replace(')', ',0.9)'));
     
-    // Connect points with a line for continuous effect
     const distance = Math.sqrt(Math.pow(currentX - lastX, 2) + Math.pow(currentY - lastY, 2));
     const steps = Math.floor(distance / 2);
     
@@ -193,7 +206,7 @@ function draw(e) {
         }
     }
     
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.3) { // 30% chance for drip at stroke end
         createDrip(currentX, currentY, currentColor);
     }
     
@@ -226,6 +239,48 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend', stopDrawing);
 
 // Clear canvas
-clearButton.addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function clearCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Reset the canvas size to trigger a clear
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    
+    // Reset the scale for Retina displays
+    ctx.scale(dpr, dpr);
+    
+    // Clear active drip animations
+    activeAnimations.forEach(cancel => cancel());
+    activeAnimations = [];
+}
+
+clearButton.addEventListener('click', clearCanvas);
+
+// Add Save as PNG button to controls
+const controlsDiv = document.querySelector('.controls');
+const saveGroup = document.createElement('div');
+saveGroup.className = 'control-group';
+const saveButton = document.createElement('button');
+saveButton.id = 'saveCanvas';
+saveButton.className = 'action-btn';
+saveButton.textContent = 'Save as PNG';
+saveGroup.appendChild(saveButton);
+controlsDiv.appendChild(saveGroup);
+
+// Save canvas as PNG
+saveButton.addEventListener('click', () => {
+    // Create a temporary canvas to save without background
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    
+    // Copy the current canvas content
+    tempCtx.drawImage(canvas, 0, 0);
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.download = 'graffiti.png';
+    link.href = tempCanvas.toDataURL('image/png');
+    link.click();
 }); 
