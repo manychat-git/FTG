@@ -40,8 +40,19 @@
         // Update canvas dimensions before clearing
         resizeCanvas();
         
-        // Clear the entire canvas
+        // Save the current context state
+        ctx.save();
+        
+        // Reset transformations
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
+        // Clear using multiple methods for robustness
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Restore the context state
+        ctx.restore();
         
         // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
@@ -277,16 +288,21 @@
     // Set color from data-pass attribute
     function setColorFromAttribute(element) {
         const colorName = element.getAttribute('data-pass');
+        console.log('Setting color from attribute:', colorName);
         
         // If clean button is clicked
         if (colorName === 'clean') {
+            console.log('Clean command detected, clearing canvas...');
             clearCanvas();
             return;
         }
         
         // Set brush color
         if (colorMap[colorName]) {
+            console.log('Color found in map:', colorMap[colorName]);
             currentColor = colorMap[colorName];
+        } else {
+            console.log('Color not found in map:', colorName);
         }
     }
 })(); 
