@@ -2,7 +2,17 @@
 (function() {
     // Find existing container
     const container = document.getElementById('graffiti-container');
-    if (!container) return;
+    if (!container) {
+        console.error('Graffiti container not found!');
+        return;
+    }
+    
+    console.log('Container found:', {
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+        position: window.getComputedStyle(container).position,
+        display: window.getComputedStyle(container).display
+    });
 
     // Create and inject canvas into the container
     const canvas = document.createElement('canvas');
@@ -15,6 +25,16 @@
     container.appendChild(canvas);
     
     const ctx = canvas.getContext('2d', { alpha: true });
+    
+    // Log initial canvas state
+    console.log('Canvas initialized:', {
+        width: canvas.width,
+        height: canvas.height,
+        styleWidth: canvas.style.width,
+        styleHeight: canvas.style.height,
+        offsetWidth: canvas.offsetWidth,
+        offsetHeight: canvas.offsetHeight
+    });
 
     // Default values
     let currentColor = '#FA0CF7';
@@ -35,6 +55,12 @@
         const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
         
+        // Log container dimensions
+        console.log('Container dimensions:', {
+            rect: rect,
+            dpr: dpr
+        });
+        
         // Reset canvas transformations
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         
@@ -45,12 +71,22 @@
         // Scale context for retina displays
         ctx.scale(dpr, dpr);
         
-        console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
+        // Log final canvas dimensions
+        console.log('Canvas dimensions set:', {
+            width: canvas.width,
+            height: canvas.height,
+            styleWidth: canvas.style.width,
+            styleHeight: canvas.style.height
+        });
     }
 
     // Clear canvas with proper dimensions
     function clearCanvas() {
-        console.log("Clearing canvas...");
+        console.log('Clearing canvas...', {
+            width: canvas.width,
+            height: canvas.height,
+            transform: ctx.getTransform()
+        });
         
         // Save current transformation matrix
         ctx.save();
@@ -68,20 +104,26 @@
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
         
-        console.log("Canvas cleared successfully!");
+        console.log('Canvas cleared, current dimensions:', {
+            width: canvas.width,
+            height: canvas.height,
+            transform: ctx.getTransform()
+        });
     }
 
     // Initial setup
     resizeCanvas();
     
     // Add load event listener first
-    window.addEventListener('load', resizeCanvas);
+    window.addEventListener('load', () => {
+        console.log("Window loaded, resizing canvas...");
+        resizeCanvas();
+    });
     
-    // Then add resize event listener with debounce
-    let resizeTimeout;
+    // Then add resize event listener
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(resizeCanvas, 100);
+        console.log("Window resized, updating canvas...");
+        resizeCanvas();
     });
 
     // Drawing state
@@ -308,14 +350,17 @@
         const colorName = element.getAttribute('data-pass');
         console.log('Setting color from attribute:', colorName);
         
+        // Handle clean command first
         if (colorName === 'clean') {
+            console.log('Clean command detected, clearing canvas...');
             clearCanvas();
             return;
         }
         
+        // Only check color map if it's not a clean command
         if (colorMap[colorName]) {
+            console.log('Setting brush color to:', colorMap[colorName]);
             currentColor = colorMap[colorName];
-            console.log('Setting brush color to:', currentColor);
         }
     }
 })(); 
