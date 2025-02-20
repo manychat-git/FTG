@@ -9,53 +9,35 @@
     canvas.id = 'drawingCanvas';
     container.appendChild(canvas);
     
-    // Create and inject controls into the container
-    const controls = document.createElement('div');
-    controls.className = 'graffiti-controls';
-    controls.innerHTML = `
-        <div class="control-group">
-            <div class="color-buttons">
-                <button class="color-btn active" data-color="#FA0CF7" style="background: #FA0CF7"></button>
-                <button class="color-btn" data-color="#00F613" style="background: #00F613"></button>
-                <button class="color-btn" data-color="#FFF100" style="background: #FFF100"></button>
-                <button class="color-btn" data-color="#96DAE2" style="background: #96DAE2"></button>
-                <button class="color-btn" data-color="#D2B6DE" style="background: #D2B6DE"></button>
-            </div>
-        </div>
-        <div class="control-group">
-            <label for="brushSize">Size</label>
-            <input type="range" id="brushSize" min="25" max="50" value="10">
-        </div>
-        <div class="control-group">
-            <button id="saveCanvas" class="action-btn">Save PNG</button>
-            <button id="clearCanvas" class="action-btn">Clear</button>
-        </div>
-    `;
-    container.appendChild(controls);
-
     const ctx = canvas.getContext('2d', { alpha: true });
-    const brushSize = document.getElementById('brushSize');
-    const clearButton = document.getElementById('clearCanvas');
-    const saveButton = document.getElementById('saveCanvas');
-    const colorButtons = document.querySelectorAll('.color-btn');
 
+    // Default values
     let currentColor = '#FA0CF7';
-    let activeAnimations = []; // Track active animations
+    const brushSize = 35; // Fixed brush size
+    let activeAnimations = [];
 
-    // Color selection
-    colorButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            colorButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentColor = btn.dataset.color;
-        });
-    });
+    // Color mapping
+    const colorMap = {
+        'pink': '#FA0CF7',
+        'green': '#00F613',
+        'blue': '#96DAE2',
+        'yellow': '#FFF100',
+        'thistle': '#D2B6DE'
+    };
 
-    // Set canvas size to window size
+    // Set color from data-pass attribute
+    function setColorFromAttribute(element) {
+        const colorName = element.getAttribute('data-pass');
+        if (colorName && colorMap[colorName]) {
+            currentColor = colorMap[colorName];
+        }
+    }
+
+    // Set canvas size to container size
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
     }
 
     // Initial setup
@@ -199,19 +181,23 @@
 
     // Drawing functions
     function startDrawing(e) {
+        const rect = canvas.getBoundingClientRect();
         isDrawing = true;
-        [lastX, lastY] = [e.clientX, e.clientY];
+        [lastX, lastY] = [
+            e.clientX - rect.left,
+            e.clientY - rect.top
+        ];
     }
 
     function draw(e) {
         if (!isDrawing) return;
         
-        const currentX = e.clientX;
-        const currentY = e.clientY;
-        const size = parseInt(brushSize.value);
+        const rect = canvas.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
         
         ctx.globalCompositeOperation = 'source-over';
-        sprayPaint(currentX, currentY, size, currentColor.replace(')', ',0.9)'));
+        sprayPaint(currentX, currentY, brushSize, currentColor.replace(')', ',0.9)'));
         
         const distance = Math.sqrt(Math.pow(currentX - lastX, 2) + Math.pow(currentY - lastY, 2));
         const steps = Math.floor(distance / 2);
@@ -219,7 +205,7 @@
         for (let i = 0; i < steps; i++) {
             const x = lastX + (currentX - lastX) * (i / steps);
             const y = lastY + (currentY - lastY) * (i / steps);
-            sprayPaint(x, y, size * 0.8, currentColor.replace(')', ',0.7)'));
+            sprayPaint(x, y, brushSize * 0.8, currentColor.replace(')', ',0.7)'));
             
             if (Math.random() < 0.05) {
                 createDrip(x, y, currentColor);
@@ -258,38 +244,10 @@
 
     canvas.addEventListener('touchend', stopDrawing);
 
-    // Save functionality
-    function saveCanvasAsPNG() {
-        // Create a temporary canvas to handle the drawing
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Copy the current canvas content
-        tempCtx.drawImage(canvas, 0, 0);
-        
-        // Create download link
-        const link = document.createElement('a');
-        link.download = 'graffiti-art.png';
-        link.href = tempCanvas.toDataURL('image/png');
-        
-        // Trigger download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    // Add save button listener
-    saveButton.addEventListener('click', saveCanvasAsPNG);
-
-    // Clear canvas
-    clearButton.addEventListener('click', () => {
-        // Cancel all active drip animations
-        activeAnimations.forEach(cancelAnimation => cancelAnimation());
-        activeAnimations = [];
-        
-        // Clear the canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Listen for clicks on elements with data-pass attribute
+    document.addEventListener('click', (e) => {
+        if (e.target.hasAttribute('data-pass')) {
+            setColorFromAttribute(e.target);
+        }
     });
 })(); 
