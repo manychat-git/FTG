@@ -288,20 +288,55 @@
     document.addEventListener('click', (e) => {
         const element = e.target;
         if (element.hasAttribute('data-pass')) {
-            console.log('Clicked element with data-pass:', element.getAttribute('data-pass'));
+            const action = element.getAttribute('data-pass');
+            console.log('Clicked element with data-pass:', action);
+            
+            if (action === 'clean') {
+                // Prevent any default actions (links, forms, etc)
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // If the element is inside a link or button, prevent their action too
+                let parent = element.parentElement;
+                while (parent) {
+                    if (parent.tagName === 'A' || parent.tagName === 'BUTTON' || parent.tagName === 'FORM') {
+                        e.preventDefault();
+                        break;
+                    }
+                    parent = parent.parentElement;
+                }
+            }
+            
             setColorFromAttribute(element);
         }
-    });
+    }, true); // Use capture phase to handle event before other listeners
 
     // Also listen for touch events on elements with data-pass
     document.addEventListener('touchend', (e) => {
         const element = e.target;
         if (element.hasAttribute('data-pass')) {
-            console.log('Touched element with data-pass:', element.getAttribute('data-pass'));
+            const action = element.getAttribute('data-pass');
+            console.log('Touched element with data-pass:', action);
+            
+            if (action === 'clean') {
+                // Prevent any default actions (links, forms, etc)
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // If the element is inside a link or button, prevent their action too
+                let parent = element.parentElement;
+                while (parent) {
+                    if (parent.tagName === 'A' || parent.tagName === 'BUTTON' || parent.tagName === 'FORM') {
+                        e.preventDefault();
+                        break;
+                    }
+                    parent = parent.parentElement;
+                }
+            }
+            
             setColorFromAttribute(element);
-            e.preventDefault(); // Prevent default touch behavior
         }
-    });
+    }, true); // Use capture phase to handle event before other listeners
 
     // Set color from data-pass attribute
     function setColorFromAttribute(element) {
