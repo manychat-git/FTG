@@ -25,42 +25,34 @@
         'thistle': '#D2B6DE'
     };
 
-    // Set color from data-pass attribute
-    function setColorFromAttribute(element) {
-        const colorName = element.getAttribute('data-pass');
-        
-        // If clean button is clicked
-        if (colorName === 'clean') {
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0,0,0,0)'; // Fully transparent background
-            ctx.beginPath();
-            ctx.rect(0, 0, canvas.width, canvas.height);
-            ctx.fill();
-            
-            // Clear active drip animations
-            activeAnimations.forEach(cancel => cancel());
-            activeAnimations = [];
-
-            console.log("Canvas cleared!");
-            return;
-        }
-        
-        // Set brush color
-        if (colorMap[colorName]) {
-            currentColor = colorMap[colorName];
-        }
-    }
-
     // Set canvas size to container size
     function resizeCanvas() {
         const rect = container.getBoundingClientRect();
         canvas.width = rect.width;
         canvas.height = rect.height;
+        console.log("Canvas resized to:", canvas.width, "x", canvas.height);
+    }
+
+    // Clear canvas with proper dimensions
+    function clearCanvas() {
+        console.log("Clearing canvas...");
+        
+        // Update canvas dimensions before clearing
+        resizeCanvas();
+        
+        // Clear the entire canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Clear active drip animations
+        activeAnimations.forEach(cancel => cancel());
+        activeAnimations = [];
+        
+        console.log("Canvas cleared successfully!");
     }
 
     // Initial setup
     resizeCanvas();
+    window.addEventListener('load', resizeCanvas);
     window.addEventListener('resize', resizeCanvas);
 
     // Drawing state
@@ -281,4 +273,20 @@
             e.preventDefault(); // Prevent default touch behavior
         }
     });
+
+    // Set color from data-pass attribute
+    function setColorFromAttribute(element) {
+        const colorName = element.getAttribute('data-pass');
+        
+        // If clean button is clicked
+        if (colorName === 'clean') {
+            clearCanvas();
+            return;
+        }
+        
+        // Set brush color
+        if (colorMap[colorName]) {
+            currentColor = colorMap[colorName];
+        }
+    }
 })(); 
