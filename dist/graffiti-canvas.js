@@ -29,12 +29,24 @@
     function setColorFromAttribute(element) {
         const colorName = element.getAttribute('data-pass');
         
-        // Simple clear functionality, just like the original clearButton
+        // If clean button is clicked
         if (colorName === 'clean') {
+            // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0,0,0,0)'; // Fully transparent background
+            ctx.beginPath();
+            ctx.rect(0, 0, canvas.width, canvas.height);
+            ctx.fill();
+            
+            // Clear active drip animations
+            activeAnimations.forEach(cancel => cancel());
+            activeAnimations = [];
+
+            console.log("Canvas cleared!");
             return;
         }
         
+        // Set brush color
         if (colorMap[colorName]) {
             currentColor = colorMap[colorName];
         }
