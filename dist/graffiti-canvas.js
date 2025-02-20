@@ -40,14 +40,19 @@
         
         if (lowerColorName === 'clean') {
             console.log('Cleaning canvas...');
-            // Cancel all active drip animations
+            // Force clear the canvas immediately
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            // Then cancel animations
             if (activeAnimations.length > 0) {
                 console.log('Cancelling', activeAnimations.length, 'active animations');
                 activeAnimations.forEach(cancelAnimation => cancelAnimation());
                 activeAnimations = [];
             }
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             console.log('Canvas cleared');
             return;
         }
