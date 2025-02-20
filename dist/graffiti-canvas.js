@@ -313,19 +313,17 @@
         const colorName = element.getAttribute('data-pass');
         console.log('Setting color from attribute:', colorName);
         
-        // If clean button is clicked
+        // Handle clean command first
         if (colorName === 'clean') {
             console.log('Clean command detected, clearing canvas...');
             clearCanvas();
             return;
         }
         
-        // Set brush color
+        // Only check color map if it's not a clean command
         if (colorMap[colorName]) {
-            console.log('Color found in map:', colorMap[colorName]);
+            console.log('Setting brush color to:', colorMap[colorName]);
             currentColor = colorMap[colorName];
-        } else {
-            console.log('Color not found in map:', colorName);
         }
     }
 })(); 
