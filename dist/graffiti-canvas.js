@@ -31,13 +31,17 @@
         if (!colorName) return;
         
         if (colorName.toLowerCase() === 'clean') {
+            console.log('Clearing canvas...');
             // Cancel all active drip animations
             if (activeAnimations.length > 0) {
                 activeAnimations.forEach(cancelAnimation => cancelAnimation());
                 activeAnimations = [];
             }
-            // Clear the canvas
+            // Make sure canvas dimensions are correct before clearing
+            resizeCanvas();
+            // Clear the canvas with proper dimensions
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            console.log('Canvas cleared with dimensions:', canvas.width, 'x', canvas.height);
             return;
         }
         
