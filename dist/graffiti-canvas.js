@@ -27,18 +27,27 @@
 
     // Set canvas size to container size
     function resizeCanvas() {
+        // Get the DPR and size of the container
+        const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        console.log("Canvas resized to:", canvas.width, "x", canvas.height);
+        
+        // Set the "actual" size of the canvas
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        
+        // Scale the context to ensure correct drawing operations
+        ctx.scale(dpr, dpr);
+        
+        // Set the "drawn" size of the canvas
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
+        console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
     }
 
     // Clear canvas with proper dimensions
     function clearCanvas() {
         console.log("Clearing canvas...");
-        
-        // Update canvas dimensions before clearing
-        resizeCanvas();
         
         // Save the current context state
         ctx.save();
@@ -46,10 +55,14 @@
         // Reset transformations
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         
+        // Get current canvas dimensions
+        const width = canvas.width;
+        const height = canvas.height;
+        
         // Clear using multiple methods for robustness
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, width, height);
         
         // Restore the context state
         ctx.restore();
@@ -58,13 +71,23 @@
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
         
-        console.log("Canvas cleared successfully!");
+        console.log("Canvas cleared with dimensions:", width, "x", height);
     }
 
     // Initial setup
     resizeCanvas();
-    window.addEventListener('load', resizeCanvas);
-    window.addEventListener('resize', resizeCanvas);
+    
+    // Add load event listener first
+    window.addEventListener('load', () => {
+        console.log("Window loaded, resizing canvas...");
+        resizeCanvas();
+    });
+    
+    // Then add resize event listener
+    window.addEventListener('resize', () => {
+        console.log("Window resized, updating canvas...");
+        resizeCanvas();
+    });
 
     // Drawing state
     let isDrawing = false;
