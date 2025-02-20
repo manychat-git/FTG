@@ -27,9 +27,11 @@
 
     // Set canvas size to container size
     function resizeCanvas() {
-        // Get the DPR and size of the container
         const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
+
+        // Reset transformations to prevent accumulation
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         
         // Set the "actual" size of the canvas
         canvas.width = rect.width * dpr;
@@ -49,29 +51,14 @@
     function clearCanvas() {
         console.log("Clearing canvas...");
         
-        // Save the current context state
-        ctx.save();
-        
-        // Reset transformations
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        
-        // Get current canvas dimensions
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        // Clear using multiple methods for robustness
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-        ctx.fillRect(0, 0, width, height);
-        
-        // Restore the context state
-        ctx.restore();
+        // Clear the entire canvas using physical dimensions
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
         
-        console.log("Canvas cleared with dimensions:", width, "x", height);
+        console.log("Canvas cleared successfully!");
     }
 
     // Initial setup
