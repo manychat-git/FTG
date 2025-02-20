@@ -2,39 +2,14 @@
 (function() {
     // Find existing container
     const container = document.getElementById('graffiti-container');
-    if (!container) {
-        console.error('Graffiti container not found!');
-        return;
-    }
-    
-    console.log('Container found:', {
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-        position: window.getComputedStyle(container).position,
-        display: window.getComputedStyle(container).display
-    });
+    if (!container) return;
 
     // Create and inject canvas into the container
     const canvas = document.createElement('canvas');
     canvas.id = 'drawingCanvas';
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
     container.appendChild(canvas);
     
     const ctx = canvas.getContext('2d', { alpha: true });
-    
-    // Log initial canvas state
-    console.log('Canvas initialized:', {
-        width: canvas.width,
-        height: canvas.height,
-        styleWidth: canvas.style.width,
-        styleHeight: canvas.style.height,
-        offsetWidth: canvas.offsetWidth,
-        offsetHeight: canvas.offsetHeight
-    });
 
     // Default values
     let currentColor = '#FA0CF7';
@@ -54,61 +29,44 @@
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const rect = container.getBoundingClientRect();
-        
-        // Log container dimensions
-        console.log('Container dimensions:', {
-            rect: rect,
-            dpr: dpr
-        });
-        
-        // Reset canvas transformations
+
+        // Reset transformations to prevent accumulation
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         
-        // Set canvas dimensions
-        canvas.width = Math.floor(rect.width * dpr);
-        canvas.height = Math.floor(rect.height * dpr);
+        // Set the "actual" size of the canvas
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
         
-        // Scale context for retina displays
+        // Scale the context to ensure correct drawing operations
         ctx.scale(dpr, dpr);
         
-        // Log final canvas dimensions
-        console.log('Canvas dimensions set:', {
-            width: canvas.width,
-            height: canvas.height,
-            styleWidth: canvas.style.width,
-            styleHeight: canvas.style.height
-        });
+        // Set the "drawn" size of the canvas
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
+        console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
     }
 
     // Clear canvas with proper dimensions
     function clearCanvas() {
-        console.log('Clearing canvas...', {
-            width: canvas.width,
-            height: canvas.height,
-            transform: ctx.getTransform()
-        });
+        console.log("Clearing canvas...");
         
-        // Save current transformation matrix
-        ctx.save();
+        // Get the container dimensions
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
         
-        // Reset transformations
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // Reset the canvas size to trigger a clear
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
         
-        // Clear the entire canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Restore transformation matrix
-        ctx.restore();
+        // Reset the scale for Retina displays
+        ctx.scale(dpr, dpr);
         
         // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
         
-        console.log('Canvas cleared, current dimensions:', {
-            width: canvas.width,
-            height: canvas.height,
-            transform: ctx.getTransform()
-        });
+        console.log("Canvas cleared with dimensions:", canvas.width, "x", canvas.height);
     }
 
     // Initial setup
