@@ -28,6 +28,14 @@
     // Set color from data-pass attribute
     function setColorFromAttribute(element) {
         const colorName = element.getAttribute('data-pass');
+        if (colorName === 'clean') {
+            // Cancel all active drip animations
+            activeAnimations.forEach(cancelAnimation => cancelAnimation());
+            activeAnimations = [];
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
         if (colorName && colorMap[colorName]) {
             currentColor = colorMap[colorName];
         }
