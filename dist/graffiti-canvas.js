@@ -13,7 +13,7 @@
 
     // Default values
     let currentColor = '#FA0CF7';
-    const brushSize = 35; // Fixed brush size
+    const brushSize = 20; // Fixed brush size
     let activeAnimations = [];
 
     // Color mapping
@@ -104,7 +104,7 @@
     // Enhanced drip effect
     function createDrip(x, y, color) {
         if (Math.random() < 0.5) {
-            const dripLength = Math.random() * 100 + 50;
+            const dripLength = Math.random() * 70 + 30; // Drips 30-100px long
             const speed = Math.random() * 2 + 0.5;
             const width = Math.random() * 2 + 1;
             const waviness = Math.random() * 1.5;
@@ -212,7 +212,7 @@
             }
         }
         
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.3) { // 30% chance for drip at stroke end
             createDrip(currentX, currentY, currentColor);
         }
         
