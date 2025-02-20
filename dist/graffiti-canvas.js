@@ -259,8 +259,20 @@
 
     // Listen for clicks on elements with data-pass attribute
     document.addEventListener('click', (e) => {
-        if (e.target.hasAttribute('data-pass')) {
-            setColorFromAttribute(e.target);
+        const element = e.target;
+        if (element.hasAttribute('data-pass')) {
+            console.log('Clicked element with data-pass:', element.getAttribute('data-pass'));
+            setColorFromAttribute(element);
+        }
+    });
+
+    // Also listen for touch events on elements with data-pass
+    document.addEventListener('touchend', (e) => {
+        const element = e.target;
+        if (element.hasAttribute('data-pass')) {
+            console.log('Touched element with data-pass:', element.getAttribute('data-pass'));
+            setColorFromAttribute(element);
+            e.preventDefault(); // Prevent default touch behavior
         }
     });
 })(); 
