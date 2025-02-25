@@ -24,11 +24,11 @@
 
     // Colors array for automatic cycling
     const colors = [
-        '#FA0CF7', // pink
-        '#00F613', // green
-        '#96DAE2', // blue
-        '#FFF100', // yellow
-        '#D2B6DE'  // thistle
+        '#FF4B00', // Orange
+        '#FFF100', // Green
+        '#96DAE2', // Blue
+        '#BC1E5D', // Yellow
+        '#E1E090'  // Thistle
     ];
     let currentColorIndex = 0;
 
