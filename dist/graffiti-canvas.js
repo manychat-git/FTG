@@ -13,11 +13,58 @@
 
     // Create buffer canvas
     const bufferCanvas = document.createElement('canvas');
-    const bufferCtx = bufferCanvas.getContext('2d', { alpha: true });
+    const bufferCtx = bufferCanvas.getContext('2d');
+    let isVisible = true;
+
+    // Initialize Intersection Observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisible = entry.isIntersecting;
+            if (isVisible) {
+                // Restore canvas content when it becomes visible
+                restoreCanvas();
+            } else {
+                // Save canvas content when it goes out of view
+                saveCanvasToBuffer();
+            }
+        });
+    }, {
+        threshold: 0.01 // React to even slight visibility changes
+    });
+
+    // Start observing the canvas
+    observer.observe(canvas);
+
+    // Save canvas state to buffer
+    function saveCanvasToBuffer() {
+        console.log("Saving canvas state to buffer...");
+        bufferCanvas.width = canvas.width;
+        bufferCanvas.height = canvas.height;
+        bufferCtx.drawImage(canvas, 0, 0);
+    }
+
+    // Restore canvas state from buffer
+    function restoreCanvas() {
+        console.log("Restoring canvas from buffer...");
+        if (bufferCanvas.width > 0 && bufferCanvas.height > 0) {
+            ctx.drawImage(bufferCanvas, 0, 0);
+        }
+    }
+
+    // Add scroll handlers for additional safety
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            if (isVisible) {
+                restoreCanvas();
+            }
+        }, 100);
+    }, { passive: true });
 
     // Default values
     let currentColor = '#FA0CF7';
-    const brushSize = 20;
+    const brushSize = 20; // Fixed brush size
     let activeAnimations = [];
 
     // Color mapping
@@ -36,43 +83,19 @@
 
         // Reset transformations to prevent accumulation
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        bufferCtx.setTransform(1, 0, 0, 1, 0, 0);
         
-        // Set the "actual" size of both canvases
+        // Set the "actual" size of the canvas
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
-        bufferCanvas.width = canvas.width;
-        bufferCanvas.height = canvas.height;
         
-        // Scale both contexts
+        // Scale the context to ensure correct drawing operations
         ctx.scale(dpr, dpr);
-        bufferCtx.scale(dpr, dpr);
         
         // Set the "drawn" size of the canvas
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
         
-        // Make container fixed position for mobile
-        container.style.position = 'fixed';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        container.style.zIndex = '1';
-        
         console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
-    }
-
-    // Save current state to buffer
-    function saveToBuffer() {
-        bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
-        bufferCtx.drawImage(canvas, 0, 0);
-    }
-
-    // Restore from buffer
-    function restoreFromBuffer() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(bufferCanvas, 0, 0);
     }
 
     // Clear canvas with proper dimensions
@@ -82,19 +105,17 @@
         const rect = container.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         
-        // Reset both canvases
         canvas.width = Math.floor(rect.width * dpr);
         canvas.height = Math.floor(rect.height * dpr);
-        bufferCanvas.width = canvas.width;
-        bufferCanvas.height = canvas.height;
         
-        // Reset the scale for both contexts
         ctx.scale(dpr, dpr);
-        bufferCtx.scale(dpr, dpr);
         
-        // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
+        
+        // Clear buffer canvas too
+        bufferCanvas.width = canvas.width;
+        bufferCanvas.height = canvas.height;
         
         console.log("Canvas cleared with dimensions:", canvas.width, "x", canvas.height);
     }
@@ -108,36 +129,11 @@
         resizeCanvas();
     });
     
-    // Then add resize event listener with debounce
-    let resizeTimeout;
+    // Then add resize event listener
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            console.log("Window resized, updating canvas...");
-            saveToBuffer();
-            resizeCanvas();
-            restoreFromBuffer();
-        }, 250);
+        console.log("Window resized, updating canvas...");
+        resizeCanvas();
     });
-
-    // Save state before scroll starts
-    window.addEventListener('scroll', () => {
-        saveToBuffer();
-    }, { passive: true });
-
-    // Restore state after scroll ends
-    window.addEventListener('scrollend', () => {
-        restoreFromBuffer();
-    }, { passive: true });
-
-    // For older browsers that don't support scrollend
-    let scrollTimeout;
-    window.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            restoreFromBuffer();
-        }, 150);
-    }, { passive: true });
 
     // Drawing state
     let isDrawing = false;
@@ -307,11 +303,14 @@
             }
         }
         
-        if (Math.random() < 0.3) { // 30% chance for drip at stroke end
+        if (Math.random() < 0.3) {
             createDrip(currentX, currentY, currentColor);
         }
         
         [lastX, lastY] = [currentX, currentY];
+
+        // Save state after drawing
+        saveCanvasToBuffer();
     }
 
     function stopDrawing() {
