@@ -11,9 +11,13 @@
     
     const ctx = canvas.getContext('2d', { alpha: true });
 
+    // Create buffer canvas
+    const bufferCanvas = document.createElement('canvas');
+    const bufferCtx = bufferCanvas.getContext('2d', { alpha: true });
+
     // Default values
     let currentColor = '#FA0CF7';
-    const brushSize = 20; // Fixed brush size
+    const brushSize = 20;
     let activeAnimations = [];
 
     // Color mapping
@@ -32,35 +36,61 @@
 
         // Reset transformations to prevent accumulation
         ctx.setTransform(1, 0, 0, 1, 0, 0);
+        bufferCtx.setTransform(1, 0, 0, 1, 0, 0);
         
-        // Set the "actual" size of the canvas
+        // Set the "actual" size of both canvases
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
+        bufferCanvas.width = canvas.width;
+        bufferCanvas.height = canvas.height;
         
-        // Scale the context to ensure correct drawing operations
+        // Scale both contexts
         ctx.scale(dpr, dpr);
+        bufferCtx.scale(dpr, dpr);
         
         // Set the "drawn" size of the canvas
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
         
+        // Make container fixed position for mobile
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.zIndex = '1';
+        
         console.log("Canvas resized to:", canvas.width, "x", canvas.height, "with DPR:", dpr);
+    }
+
+    // Save current state to buffer
+    function saveToBuffer() {
+        bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+        bufferCtx.drawImage(canvas, 0, 0);
+    }
+
+    // Restore from buffer
+    function restoreFromBuffer() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bufferCanvas, 0, 0);
     }
 
     // Clear canvas with proper dimensions
     function clearCanvas() {
         console.log("Clearing canvas...");
         
-        // Get the container dimensions
         const rect = container.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         
-        // Reset the canvas size to trigger a clear
+        // Reset both canvases
         canvas.width = Math.floor(rect.width * dpr);
         canvas.height = Math.floor(rect.height * dpr);
+        bufferCanvas.width = canvas.width;
+        bufferCanvas.height = canvas.height;
         
-        // Reset the scale for Retina displays
+        // Reset the scale for both contexts
         ctx.scale(dpr, dpr);
+        bufferCtx.scale(dpr, dpr);
         
         // Clear active drip animations
         activeAnimations.forEach(cancel => cancel());
@@ -78,11 +108,36 @@
         resizeCanvas();
     });
     
-    // Then add resize event listener
+    // Then add resize event listener with debounce
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        console.log("Window resized, updating canvas...");
-        resizeCanvas();
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            console.log("Window resized, updating canvas...");
+            saveToBuffer();
+            resizeCanvas();
+            restoreFromBuffer();
+        }, 250);
     });
+
+    // Save state before scroll starts
+    window.addEventListener('scroll', () => {
+        saveToBuffer();
+    }, { passive: true });
+
+    // Restore state after scroll ends
+    window.addEventListener('scrollend', () => {
+        restoreFromBuffer();
+    }, { passive: true });
+
+    // For older browsers that don't support scrollend
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            restoreFromBuffer();
+        }, 150);
+    }, { passive: true });
 
     // Drawing state
     let isDrawing = false;
