@@ -22,6 +22,37 @@
     let lastHeight = 0;
     let lastDpr = window.devicePixelRatio || 1;
 
+    // LocalStorage key for saving canvas state
+    const STORAGE_KEY = 'graffitiCanvasState';
+    
+    // Function to save canvas state to LocalStorage
+    function saveCanvasState() {
+        try {
+            const state = canvas.toDataURL();
+            localStorage.setItem(STORAGE_KEY, state);
+            console.log('Canvas state saved to LocalStorage');
+        } catch (error) {
+            console.warn('Failed to save canvas state:', error);
+        }
+    }
+    
+    // Function to restore canvas state from LocalStorage
+    function restoreCanvasState() {
+        try {
+            const state = localStorage.getItem(STORAGE_KEY);
+            if (state) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                    console.log('Canvas state restored from LocalStorage');
+                };
+                img.src = state;
+            }
+        } catch (error) {
+            console.warn('Failed to restore canvas state:', error);
+        }
+    }
+
     // Color mapping
     const colorMap = {
         'pink': '#FA0CF7',
@@ -121,11 +152,15 @@
         activeAnimations.forEach(cancel => cancel());
         activeAnimations = [];
         
+        // Clear the saved state in LocalStorage
+        localStorage.removeItem(STORAGE_KEY);
+        
         console.log("Canvas cleared with dimensions:", canvas.width, "x", canvas.height);
     }
 
     // Initial setup
     resizeCanvas();
+    restoreCanvasState(); // Restore previous state if exists
     
     // Use ResizeObserver instead of scroll events
     const resizeObserver = new ResizeObserver(entries => {
@@ -327,6 +362,11 @@
         }
         
         [lastX, lastY] = [currentX, currentY];
+        
+        // Save state after each drawing operation
+        // Use debounce to prevent too frequent saves
+        clearTimeout(draw.saveTimeout);
+        draw.saveTimeout = setTimeout(saveCanvasState, 1000);
     }
 
     function stopDrawing() {
