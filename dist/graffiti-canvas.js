@@ -28,8 +28,14 @@
     // Function to save canvas state to LocalStorage
     function saveCanvasState() {
         try {
-            const state = canvas.toDataURL();
-            localStorage.setItem(STORAGE_KEY, state);
+            // Save canvas dimensions along with the state
+            const state = {
+                imageData: canvas.toDataURL(),
+                width: canvas.width,
+                height: canvas.height,
+                dpr: window.devicePixelRatio || 1
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             console.log('Canvas state saved to LocalStorage');
         } catch (error) {
             console.warn('Failed to save canvas state:', error);
@@ -39,14 +45,43 @@
     // Function to restore canvas state from LocalStorage
     function restoreCanvasState() {
         try {
-            const state = localStorage.getItem(STORAGE_KEY);
-            if (state) {
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                const currentDpr = window.devicePixelRatio || 1;
+                
+                // Create a temporary canvas to handle DPR differences
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = state.width;
+                tempCanvas.height = state.height;
+                
                 const img = new Image();
                 img.onload = function() {
-                    ctx.drawImage(img, 0, 0);
+                    // Draw to temp canvas first
+                    tempCtx.drawImage(img, 0, 0);
+                    
+                    // Calculate scaling factor if DPR changed
+                    const scale = currentDpr / state.dpr;
+                    
+                    // Clear current canvas
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    canvas.width = state.width * scale;
+                    canvas.height = state.height * scale;
+                    
+                    // Scale context appropriately
+                    ctx.scale(currentDpr, currentDpr);
+                    
+                    // Draw scaled image to main canvas
+                    ctx.drawImage(
+                        tempCanvas, 
+                        0, 0, state.width, state.height,
+                        0, 0, canvas.width / currentDpr, canvas.height / currentDpr
+                    );
+                    
                     console.log('Canvas state restored from LocalStorage');
                 };
-                img.src = state;
+                img.src = state.imageData;
             }
         } catch (error) {
             console.warn('Failed to restore canvas state:', error);
