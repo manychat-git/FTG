@@ -1,5 +1,18 @@
 // Graffiti Canvas Effect
 (function() {
+    // Check if GSAP is available
+    if (typeof gsap === 'undefined') {
+        console.warn('GSAP is not loaded. Card animation will not work.');
+        return;
+    }
+
+    // Register ScrollTrigger plugin
+    if (typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+    } else {
+        console.warn('ScrollTrigger plugin is not loaded. Card animation will not work properly.');
+    }
+
     // Find existing container
     const container = document.getElementById('graffiti-container');
     if (!container) return;
@@ -197,47 +210,61 @@
     // Function to handle card animation
     function initCardAnimation() {
         const card = document.querySelector('[data-pass="container"]');
-        if (!card) return;
+        if (!card) {
+            console.warn('Card element with data-pass="container" not found');
+            return;
+        }
+
+        console.log('Initializing card animation');
 
         // Check if animation was already shown
         const animationShown = localStorage.getItem(ANIMATION_STATE_KEY);
         
         if (!animationShown) {
+            console.log('First time animation');
+            
             // Initial setup for the card
             gsap.set(card, {
                 scale: 0,
-                opacity: 1,
+                opacity: 0,
                 rotation: -180,
                 transformOrigin: "center center"
             });
 
-            // Create and run the animation
-            gsap.timeline({
-                scrollTrigger: {
-                    trigger: card,
-                    start: "top 80%",
-                    end: "top 50%",
-                    toggleActions: "play none none none",
-                    once: true,
-                    onComplete: () => {
-                        // Save the animation state
-                        localStorage.setItem(ANIMATION_STATE_KEY, 'true');
+            // Wait a bit to ensure proper initialization
+            setTimeout(() => {
+                // Create and run the animation
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: card,
+                        start: "top 80%",
+                        end: "top 50%",
+                        toggleActions: "play none none none",
+                        once: true,
+                        onComplete: () => {
+                            console.log('Animation completed');
+                            localStorage.setItem(ANIMATION_STATE_KEY, 'true');
+                        }
                     }
-                }
-            })
-            .to(card, {
-                scale: 1,
-                opacity: 1,
-                rotation: 0,
-                duration: 0.7,
-                ease: "back.out(1.4)"
-            })
-            .to(card, {
-                scale: 1,
-                duration: 0.4,
-                ease: "bounce.out"
-            });
+                });
+
+                tl.to(card, {
+                    scale: 1,
+                    opacity: 1,
+                    rotation: 0,
+                    duration: 0.7,
+                    ease: "back.out(1.4)"
+                })
+                .to(card, {
+                    scale: 1,
+                    duration: 0.4,
+                    ease: "bounce.out"
+                });
+
+                console.log('Animation timeline created');
+            }, 100);
         } else {
+            console.log('Animation already shown, setting final state');
             // If animation was already shown, just set final state
             gsap.set(card, {
                 scale: 1,
